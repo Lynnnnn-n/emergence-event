@@ -8,7 +8,9 @@ import org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration;
 public class EmergenceEventApplication {
 
     public static void main(String[] args) {
+        System.out.println("Hello World");
         SpringApplication.run(EmergenceEventApplication.class, args);
     }
 
 }
+
