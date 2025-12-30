@@ -61,6 +61,24 @@ public class EventController {
         try {
             String handlerId = body.get("handlerId");
             String handlerName = body.get("handlerName");
+            String handlerRole = body.get("handlerRole");
+            
+            // 检查权限：只有老师、管理员和指挥员可以处理事件
+            if (handlerRole == null || (!handlerRole.equals("teacher") && !handlerRole.equals("admin") && !handlerRole.equals("commander"))) {
+                return Map.of("success", false, "message", "无权处理事件");
+            }
+            
+            // 检查事件是否存在
+            Event existingEvent = eventService.findById(id);
+            if (existingEvent == null) {
+                return Map.of("success", false, "message", "事件不存在");
+            }
+            
+            // 只能处理待处理状态的事件
+            if (!"pending".equals(existingEvent.getStatus())) {
+                return Map.of("success", false, "message", "只能处理待处理状态的事件");
+            }
+            
             int result = eventService.handleEvent(id, handlerId, handlerName);
             if (result > 0) {
                 return Map.of("success", true, "message", "事件处理成功");
