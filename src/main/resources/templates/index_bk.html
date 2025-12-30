@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8"/>
+    <title>校园应急系统 - 登录</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f6fa;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .login-card {
+            background: white;
+            width: 360px;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from {opacity: 0; transform: translateY(10px);}
+            to {opacity: 1; transform: translateY(0);}
+        }
+        .login-card h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+        .input-group {
+            margin-bottom: 16px;
+        }
+        .input-group label {
+            display: block;
+            font-size: 14px;
+            margin-bottom: 6px;
+            color: #34495e;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #dcdfe6;
+            border-radius: 6px;
+            font-size: 15px;
+        }
+        .login-btn {
+            width: 100%;
+            background: #4b7bec;
+            border: none;
+            padding: 12px;
+            border-radius: 6px;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .login-btn:hover {
+            background: #3867d6;
+        }
+        .status {
+            margin-top: 12px;
+            text-align: center;
+            font-size: 14px;
+        }
+        .status.success {
+            color: #20bf6b;
+        }
+        .status.error {
+            color: #eb3b5a;
+        }
+    </style>
+</head>
+<body>
+
+<div id="app">
+    <div class="login-card">
+        <h2>校园应急响应系统</h2>
+
+        <div class="input-group">
+            <label>账号</label>
+            <input v-model="username" placeholder="请输入学号/工号"/>
+        </div>
+
+        <div class="input-group">
+            <label>密码</label>
+            <input type="password" v-model="password" placeholder="请输入密码"/>
+        </div>
+
+        <button class="login-btn" @click="login">登录</button>
+
+        <div class="status" :class="statusClass">{{ message }}</div>
+    </div>
+</div>
+
+<script>
+    const { createApp } = Vue;
+
+    createApp({
+        data() {
+            return {
+                username: "",
+                password: "",
+                message: "",
+                statusClass: ""
+            }
+        },
+        methods: {
+            async login() {
+                this.message = "登录中...";
+                this.statusClass = "";
+
+                try {
+                    const res = await fetch("/api/user/login", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            username: this.username,
+                            password: this.password
+                        })
+                    });
+
+                    const data = await res.json();
+
+                    if (res.ok && data.success) {
+                        this.message = "登录成功 🎉";
+                        this.statusClass = "success";
+                        // 保存用户信息
+                        localStorage.setItem('user', JSON.stringify(data.user));
+                        // 跳转到主页面
+                        setTimeout(() => {
+                            window.location.href = '/main.html';
+                        }, 1000);
+                    } else {
+                        this.message = data.message || "账号或密码错误";
+                        this.statusClass = "error";
+                    }
+
+                } catch (err) {
+                    this.message = "网络错误，无法连接服务器";
+                    this.statusClass = "error";
+                }
+            }
+        },
+        computed: {
+            statusClass() {
+                return this.statusClass;
+            }
+        }
+    }).mount("#app");
+</script>
+
+</body>
+</html>

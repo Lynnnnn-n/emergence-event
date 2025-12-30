@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lynn.emergence.mapper.ResourceDispatchMapper">
+    <resultMap id="BaseResultMap" type="com.lynn.emergence.entity.ResourceDispatch">
+        <id column="id" property="id"/>
+        <result column="event_id" property="eventId"/>
+        <result column="resource_id" property="resourceId"/>
+        <result column="resource_name" property="resourceName"/>
+        <result column="dispatch_quantity" property="dispatchQuantity"/>
+        <result column="dispatch_time" property="dispatchTime"/>
+        <result column="arrival_time" property="arrivalTime"/>
+        <result column="status" property="status"/>
+        <result column="dispatcher_id" property="dispatcherId"/>
+        <result column="dispatcher_name" property="dispatcherName"/>
+        <result column="remark" property="remark"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <select id="findById" resultMap="BaseResultMap">
+        SELECT * FROM resource_dispatch WHERE id = #{id}
+    </select>
+
+    <select id="findAll" resultMap="BaseResultMap">
+        SELECT * FROM resource_dispatch ORDER BY dispatch_time DESC
+    </select>
+
+    <select id="findByEventId" resultMap="BaseResultMap">
+        SELECT * FROM resource_dispatch WHERE event_id = #{eventId} ORDER BY dispatch_time DESC
+    </select>
+
+    <select id="findByResourceId" resultMap="BaseResultMap">
+        SELECT * FROM resource_dispatch WHERE resource_id = #{resourceId} ORDER BY dispatch_time DESC
+    </select>
+
+    <select id="findByStatus" resultMap="BaseResultMap">
+        SELECT * FROM resource_dispatch WHERE status = #{status} ORDER BY dispatch_time DESC
+    </select>
+
+    <insert id="insert">
+        INSERT INTO resource_dispatch (id, event_id, resource_id, resource_name, dispatch_quantity, status, dispatcher_id, dispatcher_name, remark)
+        VALUES (#{id}, #{eventId}, #{resourceId}, #{resourceName}, #{dispatchQuantity}, #{status}, #{dispatcherId}, #{dispatcherName}, #{remark})
+    </insert>
+
+    <update id="update">
+        UPDATE resource_dispatch
+        SET event_id = #{eventId}, resource_id = #{resourceId}, resource_name = #{resourceName},
+            dispatch_quantity = #{dispatchQuantity}, arrival_time = #{arrivalTime}, status = #{status},
+            dispatcher_id = #{dispatcherId}, dispatcher_name = #{dispatcherName}, remark = #{remark}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM resource_dispatch WHERE id = #{id}
+    </delete>
+</mapper>
+

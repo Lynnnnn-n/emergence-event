@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lynn.emergence.mapper.CommandMapper">
+    <resultMap id="BaseResultMap" type="com.lynn.emergence.entity.Command">
+        <id column="id" property="id"/>
+        <result column="event_id" property="eventId"/>
+        <result column="title" property="title"/>
+        <result column="content" property="content"/>
+        <result column="commander_id" property="commanderId"/>
+        <result column="commander_name" property="commanderName"/>
+        <result column="executor_id" property="executorId"/>
+        <result column="executor_name" property="executorName"/>
+        <result column="priority" property="priority"/>
+        <result column="status" property="status"/>
+        <result column="issue_time" property="issueTime"/>
+        <result column="execute_time" property="executeTime"/>
+        <result column="complete_time" property="completeTime"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <select id="findById" resultMap="BaseResultMap">
+        SELECT * FROM command WHERE id = #{id}
+    </select>
+
+    <select id="findAll" resultMap="BaseResultMap">
+        SELECT * FROM command ORDER BY issue_time DESC
+    </select>
+
+    <select id="findByEventId" resultMap="BaseResultMap">
+        SELECT * FROM command WHERE event_id = #{eventId} ORDER BY issue_time DESC
+    </select>
+
+    <select id="findByCommanderId" resultMap="BaseResultMap">
+        SELECT * FROM command WHERE commander_id = #{commanderId} ORDER BY issue_time DESC
+    </select>
+
+    <select id="findByExecutorId" resultMap="BaseResultMap">
+        SELECT * FROM command WHERE executor_id = #{executorId} ORDER BY issue_time DESC
+    </select>
+
+    <select id="findByStatus" resultMap="BaseResultMap">
+        SELECT * FROM command WHERE status = #{status} ORDER BY issue_time DESC
+    </select>
+
+    <insert id="insert">
+        INSERT INTO command (id, event_id, title, content, commander_id, commander_name, executor_id, executor_name, priority, status)
+        VALUES (#{id}, #{eventId}, #{title}, #{content}, #{commanderId}, #{commanderName}, #{executorId}, #{executorName}, #{priority}, #{status})
+    </insert>
+
+    <update id="update">
+        UPDATE command
+        SET event_id = #{eventId}, title = #{title}, content = #{content}, commander_id = #{commanderId},
+            commander_name = #{commanderName}, executor_id = #{executorId}, executor_name = #{executorName},
+            priority = #{priority}, status = #{status}, execute_time = #{executeTime}, complete_time = #{completeTime}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM command WHERE id = #{id}
+    </delete>
+</mapper>
+

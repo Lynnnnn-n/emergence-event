@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lynn.emergence.mapper.EventMapper">
+    <resultMap id="BaseResultMap" type="com.lynn.emergence.entity.Event">
+        <id column="id" property="id"/>
+        <result column="title" property="title"/>
+        <result column="description" property="description"/>
+        <result column="type" property="type"/>
+        <result column="level" property="level"/>
+        <result column="location" property="location"/>
+        <result column="reporter_id" property="reporterId"/>
+        <result column="reporter_name" property="reporterName"/>
+        <result column="status" property="status"/>
+        <result column="handler_id" property="handlerId"/>
+        <result column="handler_name" property="handlerName"/>
+        <result column="report_time" property="reportTime"/>
+        <result column="handle_time" property="handleTime"/>
+        <result column="resolve_time" property="resolveTime"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <select id="findById" resultMap="BaseResultMap">
+        SELECT * FROM event WHERE id = #{id}
+    </select>
+
+    <select id="findAll" resultMap="BaseResultMap">
+        SELECT * FROM event ORDER BY report_time DESC
+    </select>
+
+    <select id="findByReporterId" resultMap="BaseResultMap">
+        SELECT * FROM event WHERE reporter_id = #{reporterId} ORDER BY report_time DESC
+    </select>
+
+    <select id="findByStatus" resultMap="BaseResultMap">
+        SELECT * FROM event WHERE status = #{status} ORDER BY report_time DESC
+    </select>
+
+    <select id="findByType" resultMap="BaseResultMap">
+        SELECT * FROM event WHERE type = #{type} ORDER BY report_time DESC
+    </select>
+
+    <insert id="insert">
+        INSERT INTO event (id, title, description, type, level, location, reporter_id, reporter_name, status)
+        VALUES (#{id}, #{title}, #{description}, #{type}, #{level}, #{location}, #{reporterId}, #{reporterName}, #{status})
+    </insert>
+
+    <update id="update">
+        UPDATE event
+        SET title = #{title}, description = #{description}, type = #{type}, level = #{level},
+            location = #{location}, status = #{status}, handler_id = #{handlerId}, handler_name = #{handlerName},
+            handle_time = #{handleTime}, resolve_time = #{resolveTime}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM event WHERE id = #{id}
+    </delete>
+</mapper>
+
