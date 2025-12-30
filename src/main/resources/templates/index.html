@@ -171,6 +171,71 @@
             background: #f8d7da;
             color: #842029;
         }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            overflow: auto;
+        }
+        .modal.show {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: white;
+            margin: auto;
+            padding: 30px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        .modal-header h3 {
+            margin: 0;
+            color: #667eea;
+        }
+        .close {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+            background: none;
+        }
+        .close:hover {
+            color: #000;
+        }
+        .event-detail {
+            margin-bottom: 15px;
+        }
+        .event-detail label {
+            font-weight: 600;
+            color: #333;
+            display: block;
+            margin-bottom: 5px;
+        }
+        .event-detail .value {
+            color: #666;
+            padding: 8px;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
         .login-container {
             display: flex;
             justify-content: center;
@@ -367,6 +432,8 @@
                             <td>{{ formatTime(event.reportTime) }}</td>
                             <td>
                                 <button class="btn" @click="viewEvent(event.id)">查看</button>
+                                <button v-if="event.status === 'pending'" class="btn btn-success" style="margin-left: 5px;" @click="editEvent(event)">修改</button>
+                                <button v-if="event.status === 'pending'" class="btn btn-danger" style="margin-left: 5px;" @click="confirmDeleteEvent(event)">删除</button>
                             </td>
                         </tr>
                     </tbody>
@@ -550,6 +617,113 @@
         </div>
         </div>
     </div>
+
+    <!-- 查看事件详情模态框 -->
+    <div id="eventDetailModal" class="modal" :class="{show: showEventDetail}" @click.self="closeEventDetail">
+        <div class="modal-content" @click.stop>
+            <div class="modal-header">
+                <h3>事件详情</h3>
+                <button class="close" @click="closeEventDetail">&times;</button>
+            </div>
+            <div v-if="currentEvent">
+                <div class="event-detail">
+                    <label>事件标题</label>
+                    <div class="value">{{ currentEvent.title }}</div>
+                </div>
+                <div class="event-detail">
+                    <label>事件类型</label>
+                    <div class="value">{{ getEventTypeName(currentEvent.type) }}</div>
+                </div>
+                <div class="event-detail">
+                    <label>事件级别</label>
+                    <div class="value">{{ getEventLevelName(currentEvent.level) }}</div>
+                </div>
+                <div class="event-detail">
+                    <label>事件地点</label>
+                    <div class="value">{{ currentEvent.location }}</div>
+                </div>
+                <div class="event-detail">
+                    <label>事件描述</label>
+                    <div class="value" style="white-space: pre-wrap;">{{ currentEvent.description }}</div>
+                </div>
+                <div class="event-detail">
+                    <label>状态</label>
+                    <div class="value"><span class="status-badge" :class="'status-' + currentEvent.status">{{ getEventStatusName(currentEvent.status) }}</span></div>
+                </div>
+                <div class="event-detail">
+                    <label>上报人</label>
+                    <div class="value">{{ currentEvent.reporterName }}</div>
+                </div>
+                <div class="event-detail">
+                    <label>上报时间</label>
+                    <div class="value">{{ formatTime(currentEvent.reportTime) }}</div>
+                </div>
+                <div v-if="currentEvent.handlerName" class="event-detail">
+                    <label>处理人</label>
+                    <div class="value">{{ currentEvent.handlerName }}</div>
+                </div>
+                <div v-if="currentEvent.handleTime" class="event-detail">
+                    <label>处理时间</label>
+                    <div class="value">{{ formatTime(currentEvent.handleTime) }}</div>
+                </div>
+                <div v-if="currentEvent.resolveTime" class="event-detail">
+                    <label>解决时间</label>
+                    <div class="value">{{ formatTime(currentEvent.resolveTime) }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 修改事件模态框 -->
+    <div id="editEventModal" class="modal" :class="{show: showEditEvent}" @click.self="closeEditEvent">
+        <div class="modal-content" @click.stop>
+            <div class="modal-header">
+                <h3>修改事件</h3>
+                <button class="close" @click="closeEditEvent">&times;</button>
+            </div>
+            <div v-if="editEventForm.id">
+                <div v-if="message" class="alert" :class="messageType">{{ message }}</div>
+                <form @submit.prevent="updateEvent">
+                    <div class="form-group">
+                        <label>事件标题 *</label>
+                        <input v-model="editEventForm.title" required placeholder="请输入事件标题"/>
+                    </div>
+                    <div class="form-group">
+                        <label>事件类型 *</label>
+                        <select v-model="editEventForm.type" required>
+                            <option value="">请选择</option>
+                            <option value="fire">火灾</option>
+                            <option value="earthquake">地震</option>
+                            <option value="medical">医疗</option>
+                            <option value="security">安全</option>
+                            <option value="other">其他</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>事件级别 *</label>
+                        <select v-model="editEventForm.level" required>
+                            <option value="low">低</option>
+                            <option value="normal">一般</option>
+                            <option value="high">高</option>
+                            <option value="urgent">紧急</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>事件地点 *</label>
+                        <input v-model="editEventForm.location" required placeholder="请输入事件地点"/>
+                    </div>
+                    <div class="form-group">
+                        <label>事件描述 *</label>
+                        <textarea v-model="editEventForm.description" required placeholder="请详细描述事件情况"></textarea>
+                    </div>
+                    <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+                        <button type="button" class="btn" style="background: #6c757d;" @click="closeEditEvent">取消</button>
+                        <button type="submit" class="btn">保存修改</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -597,6 +771,17 @@ createApp({
                 content: '',
                 type: 'notice',
                 targetAudience: 'all'
+            },
+            showEventDetail: false,
+            showEditEvent: false,
+            currentEvent: null,
+            editEventForm: {
+                id: '',
+                title: '',
+                type: '',
+                level: '',
+                location: '',
+                description: ''
             }
         }
     },
@@ -902,8 +1087,116 @@ createApp({
                 this.showMessage('网络错误', 'error');
             }
         },
-        viewEvent(id) {
-            alert('查看事件详情功能');
+        async viewEvent(id) {
+            try {
+                const res = await fetch(`/api/event/${id}`);
+                const data = await res.json();
+                if (data.success) {
+                    this.currentEvent = data.data;
+                    this.showEventDetail = true;
+                } else {
+                    this.showMessage(data.message || '获取事件详情失败', 'error');
+                }
+            } catch (err) {
+                this.showMessage('网络错误', 'error');
+            }
+        },
+        closeEventDetail() {
+            this.showEventDetail = false;
+            this.currentEvent = null;
+        },
+        editEvent(event) {
+            this.editEventForm = {
+                id: event.id,
+                title: event.title,
+                type: event.type,
+                level: event.level,
+                location: event.location,
+                description: event.description
+            };
+            this.showEditEvent = true;
+        },
+        closeEditEvent() {
+            this.showEditEvent = false;
+            this.editEventForm = {
+                id: '',
+                title: '',
+                type: '',
+                level: '',
+                location: '',
+                description: ''
+            };
+        },
+        async updateEvent() {
+            try {
+                const res = await fetch('/api/event/update', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        ...this.editEventForm,
+                        reporterId: this.user.id
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    this.showMessage('事件修改成功', 'success');
+                    this.closeEditEvent();
+                    this.loadMyEvents();
+                } else {
+                    this.showMessage(data.message || '修改失败', 'error');
+                }
+            } catch (err) {
+                this.showMessage('网络错误', 'error');
+            }
+        },
+        getEventTypeName(type) {
+            const types = {
+                'fire': '火灾',
+                'earthquake': '地震',
+                'medical': '医疗',
+                'security': '安全',
+                'other': '其他'
+            };
+            return types[type] || type;
+        },
+        getEventLevelName(level) {
+            const levels = {
+                'low': '低',
+                'normal': '一般',
+                'high': '高',
+                'urgent': '紧急'
+            };
+            return levels[level] || level;
+        },
+        getEventStatusName(status) {
+            const statuses = {
+                'pending': '待处理',
+                'processing': '处理中',
+                'resolved': '已解决',
+                'closed': '已关闭'
+            };
+            return statuses[status] || status;
+        },
+        confirmDeleteEvent(event) {
+            if (confirm(`确定要删除事件"${event.title}"吗？删除后无法恢复。`)) {
+                this.deleteEvent(event.id);
+            }
+        },
+        async deleteEvent(eventId) {
+            try {
+                const res = await fetch(`/api/event/${eventId}?reporterId=${this.user.id}`, {
+                    method: 'DELETE'
+                });
+                const data = await res.json();
+                if (data.success) {
+                    this.showMessage('事件删除成功', 'success');
+                    this.loadMyEvents();
+                } else {
+                    this.showMessage(data.message || '删除失败', 'error');
+                }
+            } catch (err) {
+                this.showMessage('网络错误', 'error');
+            }
         },
         formatTime(timeStr) {
             if (!timeStr) return '-';
