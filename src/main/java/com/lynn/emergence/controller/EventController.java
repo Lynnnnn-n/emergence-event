@@ -85,15 +85,68 @@ public class EventController {
     }
 
     @PutMapping("/update")
-    public Map<String, Object> update(@RequestBody Event event) {
+    public Map<String, Object> update(@RequestBody Map<String, Object> body) {
         try {
-            int result = eventService.updateEvent(event);
+            String eventId = (String) body.get("id");
+            String reporterId = (String) body.get("reporterId");
+            
+            // 检查事件是否存在
+            Event existingEvent = eventService.findById(eventId);
+            if (existingEvent == null) {
+                return Map.of("success", false, "message", "事件不存在");
+            }
+            
+            // 检查权限：只能修改自己上报的事件，且状态为pending
+            if (!existingEvent.getReporterId().equals(reporterId)) {
+                return Map.of("success", false, "message", "无权修改此事件");
+            }
+            
+            if (!"pending".equals(existingEvent.getStatus())) {
+                return Map.of("success", false, "message", "只能修改待处理状态的事件");
+            }
+            
+            // 更新事件信息
+            existingEvent.setTitle((String) body.get("title"));
+            existingEvent.setDescription((String) body.get("description"));
+            existingEvent.setType((String) body.get("type"));
+            existingEvent.setLevel((String) body.get("level"));
+            existingEvent.setLocation((String) body.get("location"));
+            
+            int result = eventService.updateEvent(existingEvent);
             if (result > 0) {
-                return Map.of("success", true, "message", "更新成功");
+                return Map.of("success", true, "message", "更新成功", "data", existingEvent);
             }
             return Map.of("success", false, "message", "更新失败");
         } catch (Exception e) {
             return Map.of("success", false, "message", "更新失败: " + e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    public Map<String, Object> delete(@PathVariable String id, @RequestParam String reporterId) {
+        try {
+            // 检查事件是否存在
+            Event existingEvent = eventService.findById(id);
+            if (existingEvent == null) {
+                return Map.of("success", false, "message", "事件不存在");
+            }
+            
+            // 检查权限：只能删除自己上报的事件，且状态为pending
+            if (!existingEvent.getReporterId().equals(reporterId)) {
+                return Map.of("success", false, "message", "无权删除此事件");
+            }
+            
+            if (!"pending".equals(existingEvent.getStatus())) {
+                return Map.of("success", false, "message", "只能删除待处理状态的事件");
+            }
+            
+            int result = eventService.deleteById(id);
+            if (result > 0) {
+                return Map.of("success", true, "message", "删除成功");
+            }
+            return Map.of("success", false, "message", "删除失败");
+        } catch (Exception e) {
+            return Map.of("success", false, "message", "删除失败: " + e.getMessage());
         }
     }
 }
