@@ -291,12 +291,12 @@
 <div id="app">
     <!-- 登录界面 -->
     <div v-if="!isLoggedIn" class="login-container">
-        <div class="login-card">
+    <div class="login-card">
             <h2>🏫 校园应急响应系统</h2>
             <div v-if="message" class="alert" :class="messageType">{{ message }}</div>
             <form @submit.prevent="login">
-                <div class="input-group">
-                    <label>账号</label>
+        <div class="input-group">
+            <label>账号</label>
                     <input v-model="loginForm.username" placeholder="请输入学号/工号" required/>
                 </div>
                 <div class="input-group">
@@ -321,6 +321,7 @@
         <div class="nav">
             <button class="nav-btn" :class="{active: currentPage === 'dashboard'}" @click="currentPage = 'dashboard'">首页</button>
             <button class="nav-btn" :class="{active: currentPage === 'event'}" @click="currentPage = 'event'">事件上报</button>
+            <button v-if="user.role === 'teacher' || user.role === 'admin' || user.role === 'commander'" class="nav-btn" :class="{active: currentPage === 'handleEvent'}" @click="currentPage = 'handleEvent'">事件处理</button>
             <button class="nav-btn" :class="{active: currentPage === 'resource'}" @click="currentPage = 'resource'">资源调度</button>
             <button class="nav-btn" :class="{active: currentPage === 'command'}" @click="currentPage = 'command'">应急指挥</button>
             <button class="nav-btn" :class="{active: currentPage === 'announcement'}" @click="currentPage = 'announcement'">信息发布</button>
@@ -435,6 +436,72 @@
                                 <button v-if="event.status === 'pending'" class="btn btn-success" style="margin-left: 5px;" @click="editEvent(event)">修改</button>
                                 <button v-if="event.status === 'pending'" class="btn btn-danger" style="margin-left: 5px;" @click="confirmDeleteEvent(event)">删除</button>
                             </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 事件处理（老师/管理员/指挥员） -->
+            <div v-if="currentPage === 'handleEvent' && (user.role === 'teacher' || user.role === 'admin' || user.role === 'commander')">
+                <h2>事件处理</h2>
+                <div v-if="message" class="alert" :class="messageType">{{ message }}</div>
+                <h3>待处理事件列表</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>标题</th>
+                            <th>类型</th>
+                            <th>级别</th>
+                            <th>地点</th>
+                            <th>上报人</th>
+                            <th>上报时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="event in pendingEvents" :key="event.id">
+                            <td>{{ event.title }}</td>
+                            <td>{{ getEventTypeName(event.type) }}</td>
+                            <td>{{ getEventLevelName(event.level) }}</td>
+                            <td>{{ event.location }}</td>
+                            <td>{{ event.reporterName }}</td>
+                            <td>{{ formatTime(event.reportTime) }}</td>
+                            <td>
+                                <button class="btn" @click="viewEvent(event.id)">查看详情</button>
+                                <button class="btn btn-success" style="margin-left: 5px;" @click="handleEvent(event)">处理事件</button>
+                            </td>
+                        </tr>
+                        <tr v-if="pendingEvents.length === 0">
+                            <td colspan="7" style="text-align: center; padding: 20px; color: #999;">暂无待处理事件</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <h3 style="margin-top: 40px;">处理中事件</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>标题</th>
+                            <th>类型</th>
+                            <th>级别</th>
+                            <th>处理人</th>
+                            <th>处理时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="event in processingEvents" :key="event.id">
+                            <td>{{ event.title }}</td>
+                            <td>{{ getEventTypeName(event.type) }}</td>
+                            <td>{{ getEventLevelName(event.level) }}</td>
+                            <td>{{ event.handlerName }}</td>
+                            <td>{{ formatTime(event.handleTime) }}</td>
+                            <td>
+                                <button class="btn" @click="viewEvent(event.id)">查看详情</button>
+                                <button class="btn btn-success" style="margin-left: 5px;" @click="resolveEvent(event.id)">标记已解决</button>
+                            </td>
+                        </tr>
+                        <tr v-if="processingEvents.length === 0">
+                            <td colspan="6" style="text-align: center; padding: 20px; color: #999;">暂无处理中事件</td>
                         </tr>
                     </tbody>
                 </table>
@@ -727,11 +794,11 @@
 </div>
 
 <script>
-const { createApp } = Vue;
+    const { createApp } = Vue;
 
-createApp({
-    data() {
-        return {
+    createApp({
+        data() {
+            return {
             isLoggedIn: false,
             user: { name: '用户', role: 'student' },
             currentPage: 'dashboard',
@@ -749,6 +816,8 @@ createApp({
             },
             recentEvents: [],
             myEvents: [],
+            pendingEvents: [],
+            processingEvents: [],
             resources: [],
             dispatches: [],
             commands: [],
@@ -793,6 +862,9 @@ createApp({
             if (!this.isLoggedIn) return;
             if (newPage === 'event') {
                 this.loadMyEvents();
+            } else if (newPage === 'handleEvent') {
+                this.loadPendingEvents();
+                this.loadProcessingEvents();
             } else if (newPage === 'resource') {
                 this.loadResources();
                 this.loadDispatches();
@@ -814,20 +886,20 @@ createApp({
                 this.isLoggedIn = false;
             }
         },
-        async login() {
+            async login() {
             this.message = '登录中...';
             this.messageType = '';
             try {
                 const res = await fetch('/api/user/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
+                        body: JSON.stringify({
                         username: this.loginForm.username,
                         password: this.loginForm.password
-                    })
-                });
-                const data = await res.json();
-                if (res.ok && data.success) {
+                        })
+                    });
+                    const data = await res.json();
+                    if (res.ok && data.success) {
                     this.message = '登录成功';
                     this.messageType = 'alert-success';
                     localStorage.setItem('user', JSON.stringify(data.user));
@@ -835,7 +907,7 @@ createApp({
                     this.isLoggedIn = true;
                     this.loginForm = { username: '', password: '' };
                     this.loadDashboard();
-                } else {
+                    } else {
                     this.message = data.message || '账号或密码错误';
                     this.messageType = 'alert-error';
                 }
@@ -902,6 +974,70 @@ createApp({
                 this.myEvents = data.data || [];
             } catch (err) {
                 console.error(err);
+            }
+        },
+        async loadPendingEvents() {
+            try {
+                const res = await fetch('/api/event/list?status=pending');
+                const data = await res.json();
+                this.pendingEvents = data.data || [];
+            } catch (err) {
+                console.error(err);
+            }
+        },
+        async loadProcessingEvents() {
+            try {
+                const res = await fetch('/api/event/list?status=processing');
+                const data = await res.json();
+                this.processingEvents = data.data || [];
+            } catch (err) {
+                console.error(err);
+            }
+        },
+        async handleEvent(event) {
+            if (!confirm(`确定要处理事件"${event.title}"吗？`)) {
+                return;
+            }
+            try {
+                const res = await fetch(`/api/event/handle/${event.id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        handlerId: this.user.id,
+                        handlerName: this.user.name,
+                        handlerRole: this.user.role
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    this.showMessage('事件处理成功', 'success');
+                    this.loadPendingEvents();
+                    this.loadProcessingEvents();
+                } else {
+                    this.showMessage(data.message || '处理失败', 'error');
+                }
+            } catch (err) {
+                this.showMessage('网络错误', 'error');
+            }
+        },
+        async resolveEvent(eventId) {
+            if (!confirm('确定要将此事件标记为已解决吗？')) {
+                return;
+            }
+            try {
+                const res = await fetch(`/api/event/resolve/${eventId}`, {
+                    method: 'PUT'
+                });
+                const data = await res.json();
+                if (data.success) {
+                    this.showMessage('事件已标记为已解决', 'success');
+                    this.loadProcessingEvents();
+                    this.loadDashboard();
+                } else {
+                    this.showMessage(data.message || '操作失败', 'error');
+                }
+            } catch (err) {
+                this.showMessage('网络错误', 'error');
             }
         },
         async loadResources() {
@@ -1097,7 +1233,7 @@ createApp({
                 } else {
                     this.showMessage(data.message || '获取事件详情失败', 'error');
                 }
-            } catch (err) {
+                } catch (err) {
                 this.showMessage('网络错误', 'error');
             }
         },
@@ -1209,9 +1345,9 @@ createApp({
                 this.message = '';
                 this.messageType = '';
             }, 3000);
+            }
         }
-    }
-}).mount("#app");
+    }).mount("#app");
 </script>
 </body>
 </html>
