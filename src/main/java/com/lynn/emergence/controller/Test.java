@@ -1,25 +1,21 @@
 package com.lynn.emergence.controller;
 
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Map;
 
+/**
+ * 测试控制器
+ * 注意：登录功能已迁移到 UserController
+ */
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/test")
 public class Test {
 
-    @PostMapping("/login")
-    public Map<String, Object> login(@RequestBody Map<String, String> body) {
-        String user = body.get("username");
-        String pass = body.get("password");
-
-        if ("2025001".equals(user) && "123456".equals(pass)) {
-            return Map.of("success", true, "message", "OK");
-        }
-        return Map.of("success", false, "message", "账号或密码错误");
+    @GetMapping("/hello")
+    public Map<String, Object> hello() {
+        return Map.of("success", true, "message", "系统运行正常");
     }
 }

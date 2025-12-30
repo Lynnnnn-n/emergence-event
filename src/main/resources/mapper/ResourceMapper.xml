@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lynn.emergence.mapper.ResourceMapper">
+    <resultMap id="BaseResultMap" type="com.lynn.emergence.entity.Resource">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="type" property="type"/>
+        <result column="description" property="description"/>
+        <result column="location" property="location"/>
+        <result column="quantity" property="quantity"/>
+        <result column="available_quantity" property="availableQuantity"/>
+        <result column="status" property="status"/>
+        <result column="contact_person" property="contactPerson"/>
+        <result column="contact_phone" property="contactPhone"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <select id="findById" resultMap="BaseResultMap">
+        SELECT * FROM resource WHERE id = #{id}
+    </select>
+
+    <select id="findAll" resultMap="BaseResultMap">
+        SELECT * FROM resource ORDER BY create_time DESC
+    </select>
+
+    <select id="findByType" resultMap="BaseResultMap">
+        SELECT * FROM resource WHERE type = #{type} ORDER BY create_time DESC
+    </select>
+
+    <select id="findByStatus" resultMap="BaseResultMap">
+        SELECT * FROM resource WHERE status = #{status} ORDER BY create_time DESC
+    </select>
+
+    <insert id="insert">
+        INSERT INTO resource (id, name, type, description, location, quantity, available_quantity, status, contact_person, contact_phone)
+        VALUES (#{id}, #{name}, #{type}, #{description}, #{location}, #{quantity}, #{availableQuantity}, #{status}, #{contactPerson}, #{contactPhone})
+    </insert>
+
+    <update id="update">
+        UPDATE resource
+        SET name = #{name}, type = #{type}, description = #{description}, location = #{location},
+            quantity = #{quantity}, available_quantity = #{availableQuantity}, status = #{status},
+            contact_person = #{contactPerson}, contact_phone = #{contactPhone}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM resource WHERE id = #{id}
+    </delete>
+</mapper>
+

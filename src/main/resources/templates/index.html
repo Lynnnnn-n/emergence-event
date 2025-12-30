@@ -2,151 +2,924 @@
 <html lang="zh">
 <head>
     <meta charset="UTF-8"/>
-    <title>校园应急系统 - 登录</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>校园应急响应系统 - 主页面</title>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f5f6fa;
+        * {
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f7fa;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        .user-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .nav {
+            background: white;
+            padding: 15px 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .nav-btn {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        .nav-btn:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+        .nav-btn.active {
+            background: #764ba2;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+        .content {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            min-height: 500px;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .stat-card h3 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+        .stat-card p {
+            opacity: 0.9;
+        }
+        .btn {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        .btn:hover {
+            background: #5568d3;
+        }
+        .btn-danger {
+            background: #e74c3c;
+        }
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+        .btn-success {
+            background: #27ae60;
+        }
+        .btn-success:hover {
+            background: #229954;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+        }
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            display: inline-block;
+        }
+        .status-pending { background: #fff3cd; color: #856404; }
+        .status-processing { background: #cfe2ff; color: #084298; }
+        .status-resolved { background: #d1e7dd; color: #0f5132; }
+        .status-closed { background: #f8d7da; color: #842029; }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #333;
+        }
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        .alert {
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        .alert-success {
+            background: #d1e7dd;
+            color: #0f5132;
+        }
+        .alert-error {
+            background: #f8d7da;
+            color: #842029;
+        }
+        .login-container {
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
+            background: #f5f7fa;
         }
         .login-card {
             background: white;
             width: 360px;
-            padding: 24px;
+            padding: 40px;
             border-radius: 12px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            animation: fadeIn 0.5s ease-in-out;
-        }
-        @keyframes fadeIn {
-            from {opacity: 0; transform: translateY(10px);}
-            to {opacity: 1; transform: translateY(0);}
         }
         .login-card h2 {
             text-align: center;
-            margin-bottom: 20px;
-            color: #2c3e50;
+            margin-bottom: 30px;
+            color: #667eea;
         }
         .input-group {
-            margin-bottom: 16px;
+            margin-bottom: 20px;
         }
         .input-group label {
             display: block;
-            font-size: 14px;
-            margin-bottom: 6px;
-            color: #34495e;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #333;
         }
         .input-group input {
             width: 100%;
-            padding: 10px;
-            border: 1px solid #dcdfe6;
+            padding: 12px;
+            border: 1px solid #ddd;
             border-radius: 6px;
-            font-size: 15px;
+            font-size: 14px;
         }
         .login-btn {
             width: 100%;
-            background: #4b7bec;
-            border: none;
             padding: 12px;
-            border-radius: 6px;
+            background: #667eea;
             color: white;
+            border: none;
+            border-radius: 6px;
             font-size: 16px;
             cursor: pointer;
-            transition: 0.3s;
+            transition: all 0.3s;
         }
         .login-btn:hover {
-            background: #3867d6;
-        }
-        .status {
-            margin-top: 12px;
-            text-align: center;
-            font-size: 14px;
-        }
-        .status.success {
-            color: #20bf6b;
-        }
-        .status.error {
-            color: #eb3b5a;
+            background: #5568d3;
         }
     </style>
 </head>
 <body>
-
 <div id="app">
-    <div class="login-card">
-        <h2>校园应急响应系统</h2>
+    <!-- 登录界面 -->
+    <div v-if="!isLoggedIn" class="login-container">
+        <div class="login-card">
+            <h2>🏫 校园应急响应系统</h2>
+            <div v-if="message" class="alert" :class="messageType">{{ message }}</div>
+            <form @submit.prevent="login">
+                <div class="input-group">
+                    <label>账号</label>
+                    <input v-model="loginForm.username" placeholder="请输入学号/工号" required/>
+                </div>
+                <div class="input-group">
+                    <label>密码</label>
+                    <input type="password" v-model="loginForm.password" placeholder="请输入密码" required/>
+                </div>
+                <button type="submit" class="login-btn">登录</button>
+            </form>
+        </div>
+    </div>
 
-        <div class="input-group">
-            <label>账号</label>
-            <input v-model="username" placeholder="请输入学号/工号"/>
+    <!-- 主界面 -->
+    <div v-else>
+        <div class="header">
+            <h1>🏫 校园突发事件应急响应系统</h1>
+            <div class="user-info">
+                <span>欢迎，{{ user.name }} ({{ user.role }})</span>
+                <button class="btn btn-danger" @click="logout">退出登录</button>
+            </div>
         </div>
 
-        <div class="input-group">
-            <label>密码</label>
-            <input type="password" v-model="password" placeholder="请输入密码"/>
+        <div class="nav">
+            <button class="nav-btn" :class="{active: currentPage === 'dashboard'}" @click="currentPage = 'dashboard'">首页</button>
+            <button class="nav-btn" :class="{active: currentPage === 'event'}" @click="currentPage = 'event'">事件上报</button>
+            <button class="nav-btn" :class="{active: currentPage === 'resource'}" @click="currentPage = 'resource'">资源调度</button>
+            <button class="nav-btn" :class="{active: currentPage === 'command'}" @click="currentPage = 'command'">应急指挥</button>
+            <button class="nav-btn" :class="{active: currentPage === 'announcement'}" @click="currentPage = 'announcement'">信息发布</button>
         </div>
 
-        <button class="login-btn" @click="login">登录</button>
+        <div class="container">
+            <div class="content">
+            <!-- 首页 -->
+            <div v-if="currentPage === 'dashboard'">
+                <h2>系统概览</h2>
+                <div class="stats">
+                    <div class="stat-card">
+                        <h3>{{ stats.totalEvents }}</h3>
+                        <p>总事件数</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>{{ stats.pendingEvents }}</h3>
+                        <p>待处理事件</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>{{ stats.totalResources }}</h3>
+                        <p>可用资源</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>{{ stats.activeCommands }}</h3>
+                        <p>执行中指令</p>
+                    </div>
+                </div>
+                <h3 style="margin-top: 30px;">最近事件</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>标题</th>
+                            <th>类型</th>
+                            <th>级别</th>
+                            <th>状态</th>
+                            <th>上报时间</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="event in recentEvents" :key="event.id">
+                            <td>{{ event.title }}</td>
+                            <td>{{ event.type }}</td>
+                            <td>{{ event.level }}</td>
+                            <td><span class="status-badge" :class="'status-' + event.status">{{ event.status }}</span></td>
+                            <td>{{ formatTime(event.reportTime) }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
 
-        <div class="status" :class="statusClass">{{ message }}</div>
+            <!-- 事件上报 -->
+            <div v-if="currentPage === 'event'">
+                <h2>事件上报</h2>
+                <div v-if="message" class="alert" :class="messageType">{{ message }}</div>
+                <form @submit.prevent="reportEvent">
+                    <div class="form-group">
+                        <label>事件标题 *</label>
+                        <input v-model="eventForm.title" required placeholder="请输入事件标题"/>
+                    </div>
+                    <div class="form-group">
+                        <label>事件类型 *</label>
+                        <select v-model="eventForm.type" required>
+                            <option value="">请选择</option>
+                            <option value="fire">火灾</option>
+                            <option value="earthquake">地震</option>
+                            <option value="medical">医疗</option>
+                            <option value="security">安全</option>
+                            <option value="other">其他</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>事件级别 *</label>
+                        <select v-model="eventForm.level" required>
+                            <option value="low">低</option>
+                            <option value="normal">一般</option>
+                            <option value="high">高</option>
+                            <option value="urgent">紧急</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>事件地点 *</label>
+                        <input v-model="eventForm.location" required placeholder="请输入事件地点"/>
+                    </div>
+                    <div class="form-group">
+                        <label>事件描述 *</label>
+                        <textarea v-model="eventForm.description" required placeholder="请详细描述事件情况"></textarea>
+                    </div>
+                    <button type="submit" class="btn">提交上报</button>
+                </form>
+                <h3 style="margin-top: 40px;">我的上报记录</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>标题</th>
+                            <th>类型</th>
+                            <th>级别</th>
+                            <th>状态</th>
+                            <th>上报时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="event in myEvents" :key="event.id">
+                            <td>{{ event.title }}</td>
+                            <td>{{ event.type }}</td>
+                            <td>{{ event.level }}</td>
+                            <td><span class="status-badge" :class="'status-' + event.status">{{ event.status }}</span></td>
+                            <td>{{ formatTime(event.reportTime) }}</td>
+                            <td>
+                                <button class="btn" @click="viewEvent(event.id)">查看</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 资源调度 -->
+            <div v-if="currentPage === 'resource'">
+                <h2>资源调度</h2>
+                <div v-if="message" class="alert" :class="messageType">{{ message }}</div>
+                <h3>可用资源列表</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>资源名称</th>
+                            <th>类型</th>
+                            <th>位置</th>
+                            <th>可用数量</th>
+                            <th>状态</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="resource in resources" :key="resource.id">
+                            <td>{{ resource.name }}</td>
+                            <td>{{ resource.type }}</td>
+                            <td>{{ resource.location }}</td>
+                            <td>{{ resource.availableQuantity }}/{{ resource.quantity }}</td>
+                            <td><span class="status-badge" :class="'status-' + resource.status">{{ resource.status }}</span></td>
+                            <td>
+                                <button class="btn" @click="showDispatchDialog(resource)">调度</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <h3 style="margin-top: 40px;">调度记录</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>资源名称</th>
+                            <th>关联事件</th>
+                            <th>调度数量</th>
+                            <th>状态</th>
+                            <th>调度时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="dispatch in dispatches" :key="dispatch.id">
+                            <td>{{ dispatch.resourceName }}</td>
+                            <td>{{ dispatch.eventId }}</td>
+                            <td>{{ dispatch.dispatchQuantity }}</td>
+                            <td><span class="status-badge" :class="'status-' + dispatch.status">{{ dispatch.status }}</span></td>
+                            <td>{{ formatTime(dispatch.dispatchTime) }}</td>
+                            <td>
+                                <button v-if="dispatch.status === 'dispatched'" class="btn btn-success" @click="arriveResource(dispatch.id)">到达</button>
+                                <button v-if="dispatch.status === 'arrived'" class="btn btn-success" @click="completeDispatch(dispatch.id)">完成</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 应急指挥 -->
+            <div v-if="currentPage === 'command'">
+                <h2>应急指挥</h2>
+                <div v-if="message" class="alert" :class="messageType">{{ message }}</div>
+                <form v-if="user.role === 'commander' || user.role === 'admin'" @submit.prevent="issueCommand">
+                    <div class="form-group">
+                        <label>指令标题 *</label>
+                        <input v-model="commandForm.title" required placeholder="请输入指令标题"/>
+                    </div>
+                    <div class="form-group">
+                        <label>关联事件ID</label>
+                        <input v-model="commandForm.eventId" placeholder="可选，关联到具体事件"/>
+                    </div>
+                    <div class="form-group">
+                        <label>指令内容 *</label>
+                        <textarea v-model="commandForm.content" required placeholder="请输入指令内容"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>优先级</label>
+                        <select v-model="commandForm.priority">
+                            <option value="low">低</option>
+                            <option value="normal">一般</option>
+                            <option value="high">高</option>
+                            <option value="urgent">紧急</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn">发布指令</button>
+                </form>
+                <h3 style="margin-top: 40px;">指令列表</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>标题</th>
+                            <th>优先级</th>
+                            <th>状态</th>
+                            <th>发布人</th>
+                            <th>执行人</th>
+                            <th>发布时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="command in commands" :key="command.id">
+                            <td>{{ command.title }}</td>
+                            <td>{{ command.priority }}</td>
+                            <td><span class="status-badge" :class="'status-' + command.status">{{ command.status }}</span></td>
+                            <td>{{ command.commanderName }}</td>
+                            <td>{{ command.executorName || '-' }}</td>
+                            <td>{{ formatTime(command.issueTime) }}</td>
+                            <td>
+                                <button v-if="command.status === 'pending' && user.role !== 'commander'" class="btn" @click="executeCommand(command.id)">执行</button>
+                                <button v-if="command.status === 'executing'" class="btn btn-success" @click="completeCommand(command.id)">完成</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 信息发布 -->
+            <div v-if="currentPage === 'announcement'">
+                <h2>信息发布</h2>
+                <div v-if="message" class="alert" :class="messageType">{{ message }}</div>
+                <form @submit.prevent="publishAnnouncement">
+                    <div class="form-group">
+                        <label>标题 *</label>
+                        <input v-model="announcementForm.title" required placeholder="请输入标题"/>
+                    </div>
+                    <div class="form-group">
+                        <label>内容 *</label>
+                        <textarea v-model="announcementForm.content" required placeholder="请输入内容"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>类型</label>
+                        <select v-model="announcementForm.type">
+                            <option value="notice">通知</option>
+                            <option value="warning">预警</option>
+                            <option value="update">更新</option>
+                            <option value="other">其他</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>目标受众</label>
+                        <select v-model="announcementForm.targetAudience">
+                            <option value="all">全部</option>
+                            <option value="student">学生</option>
+                            <option value="teacher">教师</option>
+                            <option value="staff">员工</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn">发布</button>
+                </form>
+                <h3 style="margin-top: 40px;">已发布信息</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>标题</th>
+                            <th>类型</th>
+                            <th>发布人</th>
+                            <th>发布时间</th>
+                            <th>查看次数</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="announcement in announcements" :key="announcement.id">
+                            <td>{{ announcement.title }}</td>
+                            <td>{{ announcement.type }}</td>
+                            <td>{{ announcement.publisherName }}</td>
+                            <td>{{ formatTime(announcement.publishTime) }}</td>
+                            <td>{{ announcement.viewCount }}</td>
+                            <td>
+                                <button class="btn" @click="viewAnnouncement(announcement.id)">查看</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        </div>
     </div>
 </div>
 
 <script>
-    const { createApp } = Vue;
+const { createApp } = Vue;
 
-    createApp({
-        data() {
-            return {
-                username: "",
-                password: "",
-                message: "",
-                statusClass: ""
-            }
-        },
-        methods: {
-            async login() {
-                this.message = "登录中...";
-                this.statusClass = "";
-
-                try {
-                    const res = await fetch("/api/login", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                            username: this.username,
-                            password: this.password
-                        })
-                    });
-
-                    const data = await res.json();
-
-                    if (res.ok && data.success) {
-                        this.message = "登录成功 🎉";
-                        this.statusClass = "success";
-                    } else {
-                        this.message = data.message || "账号或密码错误";
-                        this.statusClass = "error";
-                    }
-
-                } catch (err) {
-                    this.message = "网络错误，无法连接服务器";
-                    this.statusClass = "error";
-                }
-            }
-        },
-        computed: {
-            statusClass() {
-                return this.statusClass;
+createApp({
+    data() {
+        return {
+            isLoggedIn: false,
+            user: { name: '用户', role: 'student' },
+            currentPage: 'dashboard',
+            message: '',
+            messageType: '',
+            loginForm: {
+                username: '',
+                password: ''
+            },
+            stats: {
+                totalEvents: 0,
+                pendingEvents: 0,
+                totalResources: 0,
+                activeCommands: 0
+            },
+            recentEvents: [],
+            myEvents: [],
+            resources: [],
+            dispatches: [],
+            commands: [],
+            announcements: [],
+            eventForm: {
+                title: '',
+                type: '',
+                level: 'normal',
+                location: '',
+                description: ''
+            },
+            commandForm: {
+                title: '',
+                eventId: '',
+                content: '',
+                priority: 'normal'
+            },
+            announcementForm: {
+                title: '',
+                content: '',
+                type: 'notice',
+                targetAudience: 'all'
             }
         }
-    }).mount("#app");
+    },
+    mounted() {
+        this.checkLogin();
+    },
+    watch: {
+        currentPage(newPage) {
+            if (!this.isLoggedIn) return;
+            if (newPage === 'event') {
+                this.loadMyEvents();
+            } else if (newPage === 'resource') {
+                this.loadResources();
+                this.loadDispatches();
+            } else if (newPage === 'command') {
+                this.loadCommands();
+            } else if (newPage === 'announcement') {
+                this.loadAnnouncements();
+            }
+        }
+    },
+    methods: {
+        checkLogin() {
+            const userStr = localStorage.getItem('user');
+            if (userStr) {
+                this.user = JSON.parse(userStr);
+                this.isLoggedIn = true;
+                this.loadDashboard();
+            } else {
+                this.isLoggedIn = false;
+            }
+        },
+        async login() {
+            this.message = '登录中...';
+            this.messageType = '';
+            try {
+                const res = await fetch('/api/user/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username: this.loginForm.username,
+                        password: this.loginForm.password
+                    })
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    this.message = '登录成功';
+                    this.messageType = 'alert-success';
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    this.user = data.user;
+                    this.isLoggedIn = true;
+                    this.loginForm = { username: '', password: '' };
+                    this.loadDashboard();
+                } else {
+                    this.message = data.message || '账号或密码错误';
+                    this.messageType = 'alert-error';
+                }
+            } catch (err) {
+                this.message = '网络错误，无法连接服务器';
+                this.messageType = 'alert-error';
+            }
+        },
+        logout() {
+            localStorage.removeItem('user');
+            this.isLoggedIn = false;
+            this.user = { name: '用户', role: 'student' };
+            this.currentPage = 'dashboard';
+            this.message = '';
+            this.messageType = '';
+        },
+        async loadDashboard() {
+            try {
+                const [eventsRes, resourcesRes, commandsRes] = await Promise.all([
+                    fetch('/api/event/list'),
+                    fetch('/api/resource/list?status=available'),
+                    fetch('/api/command/list?status=executing')
+                ]);
+                const events = await eventsRes.json();
+                const resources = await resourcesRes.json();
+                const commands = await commandsRes.json();
+                
+                this.stats.totalEvents = events.data?.length || 0;
+                this.stats.pendingEvents = events.data?.filter(e => e.status === 'pending').length || 0;
+                this.stats.totalResources = resources.data?.length || 0;
+                this.stats.activeCommands = commands.data?.length || 0;
+                this.recentEvents = events.data?.slice(0, 10) || [];
+            } catch (err) {
+                console.error(err);
+            }
+        },
+        async reportEvent() {
+            try {
+                const res = await fetch('/api/event/report', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        ...this.eventForm,
+                        reporterId: this.user.id,
+                        reporterName: this.user.name
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    this.showMessage('事件上报成功', 'success');
+                    this.eventForm = { title: '', type: '', level: 'normal', location: '', description: '' };
+                    this.loadMyEvents();
+                } else {
+                    this.showMessage(data.message || '上报失败', 'error');
+                }
+            } catch (err) {
+                this.showMessage('网络错误', 'error');
+            }
+        },
+        async loadMyEvents() {
+            try {
+                const res = await fetch(`/api/event/list?reporterId=${this.user.id}`);
+                const data = await res.json();
+                this.myEvents = data.data || [];
+            } catch (err) {
+                console.error(err);
+            }
+        },
+        async loadResources() {
+            try {
+                const res = await fetch('/api/resource/list');
+                const data = await res.json();
+                this.resources = data.data || [];
+            } catch (err) {
+                console.error(err);
+            }
+        },
+        async loadDispatches() {
+            try {
+                const res = await fetch('/api/dispatch/list');
+                const data = await res.json();
+                this.dispatches = data.data || [];
+            } catch (err) {
+                console.error(err);
+            }
+        },
+        showDispatchDialog(resource) {
+            const eventId = prompt('请输入关联的事件ID:');
+            const quantity = prompt(`请输入调度数量 (可用: ${resource.availableQuantity}):`);
+            if (eventId && quantity) {
+                this.dispatchResource(resource.id, resource.name, eventId, parseInt(quantity));
+            }
+        },
+        async dispatchResource(resourceId, resourceName, eventId, quantity) {
+            try {
+                const res = await fetch('/api/dispatch/dispatch', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        resourceId,
+                        resourceName,
+                        eventId,
+                        dispatchQuantity: quantity,
+                        dispatcherId: this.user.id,
+                        dispatcherName: this.user.name
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    this.showMessage('资源调度成功', 'success');
+                    this.loadResources();
+                    this.loadDispatches();
+                } else {
+                    this.showMessage(data.message || '调度失败', 'error');
+                }
+            } catch (err) {
+                this.showMessage('网络错误', 'error');
+            }
+        },
+        async arriveResource(id) {
+            try {
+                const res = await fetch(`/api/dispatch/arrive/${id}`, { method: 'PUT' });
+                const data = await res.json();
+                if (data.success) {
+                    this.showMessage('资源已到达', 'success');
+                    this.loadDispatches();
+                }
+            } catch (err) {
+                this.showMessage('网络错误', 'error');
+            }
+        },
+        async completeDispatch(id) {
+            try {
+                const res = await fetch(`/api/dispatch/complete/${id}`, { method: 'PUT' });
+                const data = await res.json();
+                if (data.success) {
+                    this.showMessage('调度已完成', 'success');
+                    this.loadResources();
+                    this.loadDispatches();
+                }
+            } catch (err) {
+                this.showMessage('网络错误', 'error');
+            }
+        },
+        async issueCommand() {
+            try {
+                const res = await fetch('/api/command/issue', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        ...this.commandForm,
+                        commanderId: this.user.id,
+                        commanderName: this.user.name
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    this.showMessage('指令发布成功', 'success');
+                    this.commandForm = { title: '', eventId: '', content: '', priority: 'normal' };
+                    this.loadCommands();
+                } else {
+                    this.showMessage(data.message || '发布失败', 'error');
+                }
+            } catch (err) {
+                this.showMessage('网络错误', 'error');
+            }
+        },
+        async loadCommands() {
+            try {
+                const res = await fetch('/api/command/list');
+                const data = await res.json();
+                this.commands = data.data || [];
+            } catch (err) {
+                console.error(err);
+            }
+        },
+        async executeCommand(id) {
+            try {
+                const res = await fetch(`/api/command/execute/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        executorId: this.user.id,
+                        executorName: this.user.name
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    this.showMessage('指令执行中', 'success');
+                    this.loadCommands();
+                }
+            } catch (err) {
+                this.showMessage('网络错误', 'error');
+            }
+        },
+        async completeCommand(id) {
+            try {
+                const res = await fetch(`/api/command/complete/${id}`, { method: 'PUT' });
+                const data = await res.json();
+                if (data.success) {
+                    this.showMessage('指令已完成', 'success');
+                    this.loadCommands();
+                }
+            } catch (err) {
+                this.showMessage('网络错误', 'error');
+            }
+        },
+        async publishAnnouncement() {
+            try {
+                const res = await fetch('/api/announcement/publish', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        ...this.announcementForm,
+                        publisherId: this.user.id,
+                        publisherName: this.user.name
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    this.showMessage('信息发布成功', 'success');
+                    this.announcementForm = { title: '', content: '', type: 'notice', targetAudience: 'all' };
+                    this.loadAnnouncements();
+                } else {
+                    this.showMessage(data.message || '发布失败', 'error');
+                }
+            } catch (err) {
+                this.showMessage('网络错误', 'error');
+            }
+        },
+        async loadAnnouncements() {
+            try {
+                const res = await fetch('/api/announcement/list?status=published');
+                const data = await res.json();
+                this.announcements = data.data || [];
+            } catch (err) {
+                console.error(err);
+            }
+        },
+        async viewAnnouncement(id) {
+            try {
+                const res = await fetch(`/api/announcement/${id}`);
+                const data = await res.json();
+                if (data.success) {
+                    alert(`标题: ${data.data.title}\n\n内容: ${data.data.content}\n\n发布时间: ${this.formatTime(data.data.publishTime)}`);
+                    this.loadAnnouncements();
+                }
+            } catch (err) {
+                this.showMessage('网络错误', 'error');
+            }
+        },
+        viewEvent(id) {
+            alert('查看事件详情功能');
+        },
+        formatTime(timeStr) {
+            if (!timeStr) return '-';
+            return new Date(timeStr).toLocaleString('zh-CN');
+        },
+        showMessage(msg, type) {
+            this.message = msg;
+            this.messageType = type === 'success' ? 'alert-success' : 'alert-error';
+            setTimeout(() => {
+                this.message = '';
+                this.messageType = '';
+            }, 3000);
+        }
+    }
+}).mount("#app");
 </script>
-
 </body>
 </html>
+
