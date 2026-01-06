@@ -40,6 +40,7 @@ CREATE TABLE IF NOT EXISTS `resource` (
     `id` VARCHAR(50) PRIMARY KEY COMMENT '资源ID',
     `name` VARCHAR(100) NOT NULL COMMENT '资源名称',
     `type` VARCHAR(50) NOT NULL COMMENT '资源类型：personnel-人员, equipment-设备, vehicle-车辆, material-物资, other-其他',
+    `support_type` VARCHAR(50) COMMENT '支持类型：medical-医疗, security-安保, logistics-后勤, technical-技术, vehicle-车辆 等',
     `description` TEXT COMMENT '资源描述',
     `location` VARCHAR(200) COMMENT '资源位置',
     `quantity` INT DEFAULT 1 COMMENT '数量',
@@ -67,6 +68,18 @@ CREATE TABLE IF NOT EXISTS `resource_dispatch` (
     `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='资源调度表';
+
+-- 事件流程记录表
+CREATE TABLE IF NOT EXISTS `event_process` (
+    `id` VARCHAR(50) PRIMARY KEY COMMENT '流程记录ID',
+    `event_id` VARCHAR(50) NOT NULL COMMENT '关联事件ID',
+    `process_type` VARCHAR(50) NOT NULL COMMENT '流程类型：report/command/dispatch/handle/resolve/announce 等',
+    `operator_id` VARCHAR(50) COMMENT '操作人ID',
+    `operator_name` VARCHAR(50) COMMENT '操作人姓名',
+    `process_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '操作时间',
+    `process_note` TEXT COMMENT '流程说明/备注',
+    INDEX idx_event_process_event_id (`event_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='事件流程记录表';
 
 -- 应急指挥表
 CREATE TABLE IF NOT EXISTS `command` (

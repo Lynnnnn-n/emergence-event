@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>资源调度 - 下拉框选择事件</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        select, input, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .message {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <h1>资源调度</h1>
+    
+    <form id="dispatchForm">
+        <div class="form-group">
+            <label for="eventSelect">选择事件 *</label>
+            <select id="eventSelect" required>
+                <option value="">-- 加载中... --</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="resourceId">资源ID *</label>
+            <input type="text" id="resourceId" required placeholder="例如: res001">
+        </div>
+        
+        <div class="form-group">
+            <label for="resourceName">资源名称 *</label>
+            <input type="text" id="resourceName" required placeholder="例如: 校医院应急医疗小组">
+        </div>
+        
+        <div class="form-group">
+            <label for="dispatchQuantity">调度数量 *</label>
+            <input type="number" id="dispatchQuantity" required min="1" value="1">
+        </div>
+        
+        <div class="form-group">
+            <label for="dispatcherId">调度人ID *</label>
+            <input type="text" id="dispatcherId" required placeholder="例如: user003">
+        </div>
+        
+        <div class="form-group">
+            <label for="dispatcherName">调度人姓名 *</label>
+            <input type="text" id="dispatcherName" required placeholder="例如: 李指挥">
+        </div>
+        
+        <div class="form-group">
+            <label for="remark">备注</label>
+            <textarea id="remark" rows="3" placeholder="可选：调度说明"></textarea>
+        </div>
+        
+        <button type="submit">提交调度</button>
+    </form>
+    
+    <div id="message"></div>
+
+    <script>
+        const API_BASE = 'http://localhost:8080/api'; // 根据实际情况修改
+        
+        // 页面加载时获取事件列表
+        window.addEventListener('DOMContentLoaded', function() {
+            loadEvents();
+        });
+        
+        // 加载可调度的事件列表
+        async function loadEvents() {
+            const select = document.getElementById('eventSelect');
+            select.innerHTML = '<option value="">-- 加载中... --</option>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/dispatch/events`);
+                const data = await response.json();
+                
+                if (data.success && data.data && data.data.length > 0) {
+                    select.innerHTML = '<option value="">-- 请选择事件 --</option>';
+                    data.data.forEach(event => {
+                        const option = document.createElement('option');
+                        option.value = event.value;  // 使用 value 字段作为事件ID
+                        option.textContent = event.label;  // 使用 label 字段显示
+                        select.appendChild(option);
+                    });
+                } else {
+                    select.innerHTML = '<option value="">-- 暂无可调度的事件 --</option>';
+                }
+            } catch (error) {
+                console.error('加载事件列表失败:', error);
+                select.innerHTML = '<option value="">-- 加载失败，请刷新重试 --</option>';
+                showMessage('加载事件列表失败: ' + error.message, 'error');
+            }
+        }
+        
+        // 提交调度表单
+        document.getElementById('dispatchForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const eventId = document.getElementById('eventSelect').value;
+            if (!eventId) {
+                showMessage('请选择要调度的事件', 'error');
+                return;
+            }
+            
+            const dispatchData = {
+                eventId: eventId,  // 从下拉框获取的事件ID
+                resourceId: document.getElementById('resourceId').value,
+                resourceName: document.getElementById('resourceName').value,
+                dispatchQuantity: parseInt(document.getElementById('dispatchQuantity').value),
+                dispatcherId: document.getElementById('dispatcherId').value,
+                dispatcherName: document.getElementById('dispatcherName').value,
+                remark: document.getElementById('remark').value || null
+            };
+            
+            try {
+                const response = await fetch(`${API_BASE}/dispatch/dispatch`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(dispatchData)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showMessage('调度成功！事件: ' + result.eventInfo.title, 'success');
+                    // 重置表单
+                    document.getElementById('dispatchForm').reset();
+                    // 重新加载事件列表（可能事件状态已改变）
+                    loadEvents();
+                } else {
+                    showMessage('调度失败: ' + result.message, 'error');
+                }
+            } catch (error) {
+                console.error('提交调度失败:', error);
+                showMessage('提交调度失败: ' + error.message, 'error');
+            }
+        });
+        
+        // 显示消息
+        function showMessage(message, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.textContent = message;
+            messageDiv.className = 'message ' + type;
+            messageDiv.style.display = 'block';
+            
+            // 3秒后自动隐藏成功消息
+            if (type === 'success') {
+                setTimeout(() => {
+                    messageDiv.style.display = 'none';
+                }, 3000);
+            }
+        }
+    </script>
+</body>
+</html>
+
+

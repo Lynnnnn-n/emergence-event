@@ -1,7 +1,10 @@
 package com.lynn.emergence.service;
 
 import com.lynn.emergence.entity.Command;
+import com.lynn.emergence.entity.Event;
+import com.lynn.emergence.entity.EventProcess;
 import com.lynn.emergence.mapper.CommandMapper;
+import com.lynn.emergence.mapper.EventMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,6 +17,10 @@ import java.util.UUID;
 public class CommandService {
     @Autowired
     private CommandMapper commandMapper;
+    @Autowired
+    private EventMapper eventMapper;
+    @Autowired
+    private EventProcessService eventProcessService;
 
     @Transactional(readOnly = true)
     public List<Command> findAll() {
@@ -59,7 +66,24 @@ public class CommandService {
         if (command.getIssueTime() == null) {
             command.setIssueTime(LocalDateTime.now());
         }
-        return commandMapper.insert(command);
+
+        int result = commandMapper.insert(command);
+        if (result > 0) {
+            // 记录指挥流程
+            Event event = eventMapper.findById(command.getEventId());
+            EventProcess process = new EventProcess();
+            process.setEventId(command.getEventId());
+            process.setProcessType("command");
+            process.setOperatorId(command.getCommanderId());
+            process.setOperatorName(command.getCommanderName());
+            String note = "发布指挥指令：《" + command.getTitle() + "》";
+            if (event != null) {
+                note += "，事件等级：" + event.getLevel();
+            }
+            process.setProcessNote(note);
+            eventProcessService.recordProcess(process);
+        }
+        return result;
     }
 
     @Transactional

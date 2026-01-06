@@ -12,6 +12,7 @@ public interface ResourceMapper {
     List<Resource> findAll();
     List<Resource> findByType(@Param("type") String type);
     List<Resource> findByStatus(@Param("status") String status);
+    List<Resource> findBySupportTypeAndStatus(@Param("supportType") String supportType, @Param("status") String status);
     int insert(Resource resource);
     int update(Resource resource);
     int deleteById(@Param("id") String id);

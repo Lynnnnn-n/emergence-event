@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lynn.emergence.mapper.EventProcessMapper">
+    <resultMap id="BaseResultMap" type="com.lynn.emergence.entity.EventProcess">
+        <id column="id" property="id"/>
+        <result column="event_id" property="eventId"/>
+        <result column="process_type" property="processType"/>
+        <result column="operator_id" property="operatorId"/>
+        <result column="operator_name" property="operatorName"/>
+        <result column="process_time" property="processTime"/>
+        <result column="process_note" property="processNote"/>
+    </resultMap>
+
+    <select id="findById" resultMap="BaseResultMap">
+        SELECT * FROM event_process WHERE id = #{id}
+    </select>
+
+    <select id="findAll" resultMap="BaseResultMap">
+        SELECT * FROM event_process ORDER BY process_time DESC
+    </select>
+
+    <select id="findByEventId" resultMap="BaseResultMap">
+        SELECT * FROM event_process WHERE event_id = #{eventId} ORDER BY process_time ASC
+    </select>
+
+    <insert id="insert">
+        INSERT INTO event_process (id, event_id, process_type, operator_id, operator_name, process_time, process_note)
+        VALUES (#{id}, #{eventId}, #{processType}, #{operatorId}, #{operatorName}, #{processTime}, #{processNote})
+    </insert>
+</mapper>
+
+

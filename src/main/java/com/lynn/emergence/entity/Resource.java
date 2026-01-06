@@ -6,6 +6,11 @@ public class Resource {
     private String id;
     private String name;
     private String type;
+    /**
+     * 资源支持类型：medical/security/logistics/technical/vehicle 等
+     * 用于根据事件类型和等级做资源推荐
+     */
+    private String supportType;
     private String description;
     private String location;
     private Integer quantity;
@@ -41,6 +46,14 @@ public class Resource {
 
     public void setType(String type) {
         this.type = type;
+    }
+
+    public String getSupportType() {
+        return supportType;
+    }
+
+    public void setSupportType(String supportType) {
+        this.supportType = supportType;
     }
 
     public String getDescription() {

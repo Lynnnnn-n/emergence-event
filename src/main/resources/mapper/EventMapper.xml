@@ -40,6 +40,18 @@
         SELECT * FROM event WHERE type = #{type} ORDER BY report_time DESC
     </select>
 
+    <select id="findByLevel" resultMap="BaseResultMap">
+        SELECT * FROM event WHERE level = #{level} ORDER BY report_time DESC
+    </select>
+
+    <select id="findByTypeAndLevel" resultMap="BaseResultMap">
+        SELECT * FROM event WHERE type = #{type} AND level = #{level} ORDER BY report_time DESC
+    </select>
+
+    <select id="findByTitleLike" resultMap="BaseResultMap">
+        SELECT * FROM event WHERE title LIKE CONCAT('%', #{title}, '%') ORDER BY report_time DESC
+    </select>
+
     <insert id="insert">
         INSERT INTO event (id, title, description, type, level, location, reporter_id, reporter_name, status)
         VALUES (#{id}, #{title}, #{description}, #{type}, #{level}, #{location}, #{reporterId}, #{reporterName}, #{status})

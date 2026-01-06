@@ -1,5 +1,6 @@
 package com.lynn.emergence.service;
 
+import com.lynn.emergence.entity.EventProcess;
 import com.lynn.emergence.entity.Resource;
 import com.lynn.emergence.entity.ResourceDispatch;
 import com.lynn.emergence.mapper.ResourceDispatchMapper;
@@ -18,6 +19,8 @@ public class ResourceDispatchService {
     private ResourceDispatchMapper dispatchMapper;
     @Autowired
     private ResourceMapper resourceMapper;
+    @Autowired
+    private EventProcessService eventProcessService;
 
     @Transactional(readOnly = true)
     public List<ResourceDispatch> findAll() {
@@ -68,7 +71,17 @@ public class ResourceDispatchService {
             throw new RuntimeException("资源数量不足");
         }
 
-        return dispatchMapper.insert(dispatch);
+        int result = dispatchMapper.insert(dispatch);
+        if (result > 0) {
+            EventProcess process = new EventProcess();
+            process.setEventId(dispatch.getEventId());
+            process.setProcessType("dispatch");
+            process.setOperatorId(dispatch.getDispatcherId());
+            process.setOperatorName(dispatch.getDispatcherName());
+            process.setProcessNote("调度资源：" + dispatch.getResourceName() + "，数量：" + dispatch.getDispatchQuantity());
+            eventProcessService.recordProcess(process);
+        }
+        return result;
     }
 
     @Transactional
@@ -82,7 +95,15 @@ public class ResourceDispatchService {
         if (dispatch != null) {
             dispatch.setStatus("arrived");
             dispatch.setArrivalTime(LocalDateTime.now());
-            return dispatchMapper.update(dispatch);
+            int result = dispatchMapper.update(dispatch);
+            if (result > 0) {
+                EventProcess process = new EventProcess();
+                process.setEventId(dispatch.getEventId());
+                process.setProcessType("dispatch");
+                process.setProcessNote("调度资源已到达现场");
+                eventProcessService.recordProcess(process);
+            }
+            return result;
         }
         return 0;
     }
@@ -101,7 +122,15 @@ public class ResourceDispatchService {
                 }
                 resourceMapper.update(resource);
             }
-            return dispatchMapper.update(dispatch);
+            int result = dispatchMapper.update(dispatch);
+            if (result > 0) {
+                EventProcess process = new EventProcess();
+                process.setEventId(dispatch.getEventId());
+                process.setProcessType("dispatch");
+                process.setProcessNote("调度资源执行完毕并已归还");
+                eventProcessService.recordProcess(process);
+            }
+            return result;
         }
         return 0;
     }

@@ -1,6 +1,7 @@
 package com.lynn.emergence.service;
 
 import com.lynn.emergence.entity.Event;
+import com.lynn.emergence.entity.EventProcess;
 import com.lynn.emergence.mapper.EventMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -14,6 +15,8 @@ import java.util.UUID;
 public class EventService {
     @Autowired
     private EventMapper eventMapper;
+    @Autowired
+    private EventProcessService eventProcessService;
 
     @Transactional(readOnly = true)
     public List<Event> findAll() {
@@ -40,6 +43,21 @@ public class EventService {
         return eventMapper.findByType(type);
     }
 
+    @Transactional(readOnly = true)
+    public List<Event> findByLevel(String level) {
+        return eventMapper.findByLevel(level);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Event> findByTypeAndLevel(String type, String level) {
+        return eventMapper.findByTypeAndLevel(type, level);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Event> findByTitleLike(String title) {
+        return eventMapper.findByTitleLike(title);
+    }
+
     @Transactional
     public int reportEvent(Event event) {
         if (event.getId() == null || event.getId().isEmpty()) {
@@ -51,7 +69,18 @@ public class EventService {
         if (event.getReportTime() == null) {
             event.setReportTime(LocalDateTime.now());
         }
-        return eventMapper.insert(event);
+        int result = eventMapper.insert(event);
+        if (result > 0) {
+            // 记录事件上报流程
+            EventProcess process = new EventProcess();
+            process.setEventId(event.getId());
+            process.setProcessType("report");
+            process.setOperatorId(event.getReporterId());
+            process.setOperatorName(event.getReporterName());
+            process.setProcessNote("事件上报：" + event.getTitle());
+            eventProcessService.recordProcess(process);
+        }
+        return result;
     }
 
     @Transactional
@@ -67,7 +96,17 @@ public class EventService {
             event.setHandlerName(handlerName);
             event.setStatus("processing");
             event.setHandleTime(LocalDateTime.now());
-            return eventMapper.update(event);
+            int result = eventMapper.update(event);
+            if (result > 0) {
+                EventProcess process = new EventProcess();
+                process.setEventId(event.getId());
+                process.setProcessType("handle");
+                process.setOperatorId(handlerId);
+                process.setOperatorName(handlerName);
+                process.setProcessNote("事件进入处理中状态");
+                eventProcessService.recordProcess(process);
+            }
+            return result;
         }
         return 0;
     }
@@ -78,7 +117,15 @@ public class EventService {
         if (event != null) {
             event.setStatus("resolved");
             event.setResolveTime(LocalDateTime.now());
-            return eventMapper.update(event);
+            int result = eventMapper.update(event);
+            if (result > 0) {
+                EventProcess process = new EventProcess();
+                process.setEventId(event.getId());
+                process.setProcessType("resolve");
+                process.setProcessNote("事件已解决");
+                eventProcessService.recordProcess(process);
+            }
+            return result;
         }
         return 0;
     }
