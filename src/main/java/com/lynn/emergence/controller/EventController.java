@@ -20,14 +20,20 @@ public class EventController {
     @GetMapping("/list")
     public Map<String, Object> list(@RequestParam(required = false) String status,
                                     @RequestParam(required = false) String type,
+                                    @RequestParam(required = false) String level,
                                     @RequestParam(required = false) String reporterId) {
         List<Event> events;
         if (reporterId != null && !reporterId.isEmpty()) {
             events = eventService.findByReporterId(reporterId);
         } else if (status != null && !status.isEmpty()) {
             events = eventService.findByStatus(status);
+        } else if (type != null && !type.isEmpty() && level != null && !level.isEmpty()) {
+            // 按事件类型 + 等级联动查询，用于分级指挥或资源推荐
+            events = eventService.findByTypeAndLevel(type, level);
         } else if (type != null && !type.isEmpty()) {
             events = eventService.findByType(type);
+        } else if (level != null && !level.isEmpty()) {
+            events = eventService.findByLevel(level);
         } else {
             events = eventService.findAll();
         }

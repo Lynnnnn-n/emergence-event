@@ -34,6 +34,12 @@ public class ResourceService {
         return resourceMapper.findByStatus(status);
     }
 
+    @Transactional(readOnly = true)
+    public List<Resource> recommendBySupportType(String supportType) {
+        // 只推荐空闲且有可用数量的资源
+        return resourceMapper.findBySupportTypeAndStatus(supportType, "available");
+    }
+
     @Transactional
     public int save(Resource resource) {
         if (resource.getId() == null || resource.getId().isEmpty()) {

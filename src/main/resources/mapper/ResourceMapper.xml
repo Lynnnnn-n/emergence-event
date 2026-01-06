@@ -5,6 +5,7 @@
         <id column="id" property="id"/>
         <result column="name" property="name"/>
         <result column="type" property="type"/>
+        <result column="support_type" property="supportType"/>
         <result column="description" property="description"/>
         <result column="location" property="location"/>
         <result column="quantity" property="quantity"/>
@@ -32,14 +33,23 @@
         SELECT * FROM resource WHERE status = #{status} ORDER BY create_time DESC
     </select>
 
+    <!-- 按支持类型 + 状态（如空闲）查询，用于资源推荐 -->
+    <select id="findBySupportTypeAndStatus" resultMap="BaseResultMap">
+        SELECT * FROM resource
+        WHERE support_type = #{supportType}
+          AND status = #{status}
+          AND available_quantity > 0
+        ORDER BY create_time DESC
+    </select>
+
     <insert id="insert">
-        INSERT INTO resource (id, name, type, description, location, quantity, available_quantity, status, contact_person, contact_phone)
-        VALUES (#{id}, #{name}, #{type}, #{description}, #{location}, #{quantity}, #{availableQuantity}, #{status}, #{contactPerson}, #{contactPhone})
+        INSERT INTO resource (id, name, type, support_type, description, location, quantity, available_quantity, status, contact_person, contact_phone)
+        VALUES (#{id}, #{name}, #{type}, #{supportType}, #{description}, #{location}, #{quantity}, #{availableQuantity}, #{status}, #{contactPerson}, #{contactPhone})
     </insert>
 
     <update id="update">
         UPDATE resource
-        SET name = #{name}, type = #{type}, description = #{description}, location = #{location},
+        SET name = #{name}, type = #{type}, support_type = #{supportType}, description = #{description}, location = #{location},
             quantity = #{quantity}, available_quantity = #{availableQuantity}, status = #{status},
             contact_person = #{contactPerson}, contact_phone = #{contactPhone}
         WHERE id = #{id}

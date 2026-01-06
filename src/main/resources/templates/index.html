@@ -782,6 +782,47 @@
         </div>
     </div>
 
+    <!-- 资源调度模态框 -->
+    <div id="dispatchModal" class="modal" :class="{show: showDispatchModal}" @click.self="closeDispatchModal">
+        <div class="modal-content" @click.stop>
+            <div class="modal-header">
+                <h3>资源调度</h3>
+                <button class="close" @click="closeDispatchModal">&times;</button>
+            </div>
+            <div v-if="message" class="alert" :class="messageType">{{ message }}</div>
+            <form @submit.prevent="dispatchResource">
+                <div class="form-group">
+                    <label>资源名称</label>
+                    <input :value="dispatchForm.resourceName" disabled style="background: #f5f5f5;"/>
+                </div>
+                <div class="form-group">
+                    <label>选择事件 *</label>
+                    <select v-model="dispatchForm.eventId" required>
+                        <option value="">-- 请选择事件 --</option>
+                        <option v-for="event in dispatchableEvents" :key="event.value" :value="event.value">
+                            {{ event.label }}
+                        </option>
+                    </select>
+                    <p v-if="dispatchableEvents.length === 0" style="color: #999; font-size: 12px; margin-top: 5px;">
+                        暂无可调度的事件（只有状态为"待处理"或"处理中"的事件可以调度）
+                    </p>
+                </div>
+                <div class="form-group">
+                    <label>调度数量 *</label>
+                    <input type="number" v-model.number="dispatchForm.dispatchQuantity" required min="1" placeholder="请输入调度数量"/>
+                </div>
+                <div class="form-group">
+                    <label>备注</label>
+                    <textarea v-model="dispatchForm.remark" rows="3" placeholder="可选：调度说明"></textarea>
+                </div>
+                <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+                    <button type="button" class="btn" style="background: #6c757d;" @click="closeDispatchModal">取消</button>
+                    <button type="submit" class="btn">提交调度</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- 修改事件模态框 -->
     <div id="editEventModal" class="modal" :class="{show: showEditEvent}" @click.self="closeEditEvent">
         <div class="modal-content" @click.stop>
@@ -861,6 +902,15 @@
             processingEvents: [],
             resources: [],
             dispatches: [],
+            dispatchableEvents: [],  // 可调度的事件列表
+            showDispatchModal: false,  // 显示调度模态框
+            dispatchForm: {  // 调度表单
+                resourceId: '',
+                resourceName: '',
+                eventId: '',
+                dispatchQuantity: 1,
+                remark: ''
+            },
             commands: [],
             announcements: [],
             bulletins: [],
@@ -911,6 +961,7 @@
             } else if (newPage === 'resource') {
                 this.loadResources();
                 this.loadDispatches();
+                this.loadDispatchableEvents();  // 加载可调度的事件列表
             } else if (newPage === 'command') {
                 this.loadCommands();
             } else if (newPage === 'announcement') {
@@ -1103,14 +1154,75 @@
                 console.error(err);
             }
         },
-        showDispatchDialog(resource) {
-            const eventId = prompt('请输入关联的事件ID:');
-            const quantity = prompt(`请输入调度数量 (可用: ${resource.availableQuantity}):`);
-            if (eventId && quantity) {
-                this.dispatchResource(resource.id, resource.name, eventId, parseInt(quantity));
+        async loadDispatchableEvents() {
+            try {
+                const res = await fetch('/api/dispatch/events');
+                const data = await res.json();
+                if (data.success) {
+                    this.dispatchableEvents = data.data || [];
+                }
+            } catch (err) {
+                console.error('加载可调度事件列表失败:', err);
             }
         },
-        async dispatchResource(resourceId, resourceName, eventId, quantity) {
+        showDispatchDialog(resource) {
+            this.dispatchForm = {
+                resourceId: resource.id,
+                resourceName: resource.name,
+                eventId: '',
+                dispatchQuantity: 1,
+                remark: ''
+            };
+            this.loadDispatchableEvents();  // 重新加载事件列表
+            this.showDispatchModal = true;
+        },
+        closeDispatchModal() {
+            this.showDispatchModal = false;
+            this.dispatchForm = {
+                resourceId: '',
+                resourceName: '',
+                eventId: '',
+                dispatchQuantity: 1,
+                remark: ''
+            };
+        },
+        async dispatchResource() {
+            if (!this.dispatchForm.eventId) {
+                this.showMessage('请选择要调度的事件', 'error');
+                return;
+            }
+            if (!this.dispatchForm.dispatchQuantity || this.dispatchForm.dispatchQuantity <= 0) {
+                this.showMessage('请输入有效的调度数量', 'error');
+                return;
+            }
+            try {
+                const res = await fetch('/api/dispatch/dispatch', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        eventId: this.dispatchForm.eventId,
+                        resourceId: this.dispatchForm.resourceId,
+                        resourceName: this.dispatchForm.resourceName,
+                        dispatchQuantity: this.dispatchForm.dispatchQuantity,
+                        dispatcherId: this.user.id,
+                        dispatcherName: this.user.name,
+                        remark: this.dispatchForm.remark || null
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    this.showMessage('资源调度成功', 'success');
+                    this.closeDispatchModal();
+                    this.loadResources();
+                    this.loadDispatches();
+                } else {
+                    this.showMessage(data.message || '调度失败', 'error');
+                }
+            } catch (err) {
+                this.showMessage('网络错误', 'error');
+            }
+        },
+        async dispatchResourceOld(resourceId, resourceName, eventId, quantity) {
             try {
                 const res = await fetch('/api/dispatch/dispatch', {
                     method: 'POST',

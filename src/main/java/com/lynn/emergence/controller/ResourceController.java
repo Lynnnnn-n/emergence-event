@@ -18,9 +18,14 @@ public class ResourceController {
 
     @GetMapping("/list")
     public Map<String, Object> list(@RequestParam(required = false) String type,
-                                     @RequestParam(required = false) String status) {
+                                     @RequestParam(required = false) String status,
+                                     @RequestParam(required = false) String supportType,
+                                     @RequestParam(required = false, defaultValue = "false") boolean recommend) {
         List<Resource> resources;
-        if (type != null && !type.isEmpty()) {
+        if (recommend && supportType != null && !supportType.isEmpty()) {
+            // 用于“半自动推荐资源”：按支持类型 + 空闲状态推荐
+            resources = resourceService.recommendBySupportType(supportType);
+        } else if (type != null && !type.isEmpty()) {
             resources = resourceService.findByType(type);
         } else if (status != null && !status.isEmpty()) {
             resources = resourceService.findByStatus(status);
